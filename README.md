@@ -39,8 +39,4 @@ Records are stored in memory during execution and are cleared when the applicati
 
 **Subham Tewatia**  
 **Student ID:** 2601940017
-"""
 
-path = Path("/mnt/data/README_Short_Professional.md")
-path.write_text(content, encoding="utf-8")
-print(f"Created: {path}")
