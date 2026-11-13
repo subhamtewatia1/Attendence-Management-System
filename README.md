@@ -1,6 +1,6 @@
-from pathlib import Path
 
-content = """# Expense, Attendance, Grading & Billing Management System
+
+# Expense, Attendance, Grading & Billing Management System
 
 A Python-based, menu-driven console application for managing expenses, attendance, student grades, and customer bills.
 
