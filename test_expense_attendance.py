@@ -17,6 +17,7 @@ from functions import (
     attendance_status,
     calculate_discount,
     calculate_tax,
+    calculate_grade,
     TAX_RATE,
     PASS_MARK,
     ATTENDANCE_ELIGIBLE,
@@ -291,6 +292,152 @@ class TestAttendanceEdgeCases(unittest.TestCase):
         """EC-ATT-08: Floating point input for present and total days."""
         result = attendance_percentage(7.5, 3.0)
         self.assertAlmostEqual(result, 250.0)
+
+
+# ===========================================================================
+# GRADING MANAGEMENT TEST CASES
+# ===========================================================================
+class TestGradingManagement(unittest.TestCase):
+    """Test cases for the Grading Management module.
+    
+    Grading scale linked to roll number:
+    - A+ : 90-100 (Outstanding)
+    - A  : 80-89  (Excellent)
+    - B  : 70-79  (Very Good)
+    - C  : 60-69  (Good)
+    - D  : 50-59  (Satisfactory)
+    - E  : 35-49  (Pass)
+    - F  : 0-34   (Fail)
+    
+    Pass/Fail rule: If any subject mark < 35, result is FAIL.
+    """
+
+    def test_grade_a_plus_outstanding(self):
+        """TC-GRD-01: Percentage 95 should return grade A+ (Outstanding)."""
+        grade, remark = calculate_grade(95)
+        self.assertEqual(grade, "A+")
+        self.assertEqual(remark, "Outstanding")
+
+    def test_grade_a_excellent(self):
+        """TC-GRD-02: Percentage 85 should return grade A (Excellent)."""
+        grade, remark = calculate_grade(85)
+        self.assertEqual(grade, "A")
+        self.assertEqual(remark, "Excellent")
+
+    def test_grade_b_very_good(self):
+        """TC-GRD-03: Percentage 75 should return grade B (Very Good)."""
+        grade, remark = calculate_grade(75)
+        self.assertEqual(grade, "B")
+        self.assertEqual(remark, "Very Good")
+
+    def test_grade_c_good(self):
+        """TC-GRD-04: Percentage 65 should return grade C (Good)."""
+        grade, remark = calculate_grade(65)
+        self.assertEqual(grade, "C")
+        self.assertEqual(remark, "Good")
+
+    def test_grade_d_satisfactory(self):
+        """TC-GRD-05: Percentage 55 should return grade D (Satisfactory)."""
+        grade, remark = calculate_grade(55)
+        self.assertEqual(grade, "D")
+        self.assertEqual(remark, "Satisfactory")
+
+    def test_grade_e_pass(self):
+        """TC-GRD-06: Percentage 40 should return grade E (Pass)."""
+        grade, remark = calculate_grade(40)
+        self.assertEqual(grade, "E")
+        self.assertEqual(remark, "Pass")
+
+    def test_grade_f_fail(self):
+        """TC-GRD-07: Percentage 30 should return grade F (Fail)."""
+        grade, remark = calculate_grade(30)
+        self.assertEqual(grade, "F")
+        self.assertEqual(remark, "Fail")
+
+    def test_grade_boundary_90(self):
+        """TC-GRD-08: Exactly 90% should return grade A+."""
+        grade, remark = calculate_grade(90)
+        self.assertEqual(grade, "A+")
+
+    def test_grade_boundary_80(self):
+        """TC-GRD-09: Exactly 80% should return grade A."""
+        grade, remark = calculate_grade(80)
+        self.assertEqual(grade, "A")
+
+    def test_grade_boundary_70(self):
+        """TC-GRD-10: Exactly 70% should return grade B."""
+        grade, remark = calculate_grade(70)
+        self.assertEqual(grade, "B")
+
+    def test_grade_boundary_60(self):
+        """TC-GRD-11: Exactly 60% should return grade C."""
+        grade, remark = calculate_grade(60)
+        self.assertEqual(grade, "C")
+
+    def test_grade_boundary_35(self):
+        """TC-GRD-12: Exactly 35% should return grade E (Pass)."""
+        grade, remark = calculate_grade(35)
+        self.assertEqual(grade, "E")
+
+
+# ===========================================================================
+# EDGE CASES - GRADING MANAGEMENT
+# ===========================================================================
+class TestGradingEdgeCases(unittest.TestCase):
+    """Edge case test cases for Grading Management."""
+
+    def test_grade_100_percent(self):
+        """EC-GRD-01: 100% should return grade A+."""
+        grade, remark = calculate_grade(100)
+        self.assertEqual(grade, "A+")
+        self.assertEqual(remark, "Outstanding")
+
+    def test_grade_zero_percent(self):
+        """EC-GRD-02: 0% should return grade F (Fail)."""
+        grade, remark = calculate_grade(0)
+        self.assertEqual(grade, "F")
+        self.assertEqual(remark, "Fail")
+
+    def test_grade_negative_percentage(self):
+        """EC-GRD-03: Negative percentage should return grade F."""
+        grade, remark = calculate_grade(-10)
+        self.assertEqual(grade, "F")
+        self.assertEqual(remark, "Fail")
+
+    def test_grade_above_100(self):
+        """EC-GRD-04: Percentage above 100 should return grade A+."""
+        grade, remark = calculate_grade(150)
+        self.assertEqual(grade, "A+")
+        self.assertEqual(remark, "Outstanding")
+
+    def test_grade_boundary_89_vs_90(self):
+        """EC-GRD-05: Boundary between A (89) and A+ (90)."""
+        grade_89, _ = calculate_grade(89)
+        grade_90, _ = calculate_grade(90)
+        self.assertEqual(grade_89, "A")
+        self.assertEqual(grade_90, "A+")
+
+    def test_grade_boundary_34_vs_35(self):
+        """EC-GRD-06: Boundary between F (34) and E (35)."""
+        grade_34, _ = calculate_grade(34)
+        grade_35, _ = calculate_grade(35)
+        self.assertEqual(grade_34, "F")
+        self.assertEqual(grade_35, "E")
+
+    def test_grade_floating_point_percentage(self):
+        """EC-GRD-07: Floating point percentage should return correct grade."""
+        grade, remark = calculate_grade(85.5)
+        self.assertEqual(grade, "A")
+        self.assertEqual(remark, "Excellent")
+
+    def test_roll_no_unique_key_in_grades(self):
+        """EC-GRD-08: Roll number should be unique key in grades dictionary."""
+        grades_dict = {}
+        roll_no = "G101"
+        grades_dict[roll_no] = {"name": "Bob", "percentage": 88.0, "grade": "A", "result": "PASS"}
+        self.assertIn(roll_no, grades_dict)
+        self.assertEqual(grades_dict[roll_no]["name"], "Bob")
+        self.assertEqual(grades_dict[roll_no]["grade"], "A")
 
 
 # ===========================================================================
